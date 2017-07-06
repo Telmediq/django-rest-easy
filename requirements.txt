@@ -1,0 +1,10 @@
+# Development packages.
+coverage
+pylint
+radon
+sphinx
+
+# Packages required for django-rest-easy to run.
+six
+django>=1.8.0
+djangorestframework>=3.0.0
