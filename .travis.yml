@@ -6,7 +6,5 @@ python:
   - "3.5"
   - "3.6"
 script:
-  - pylint devourer --rcfile=.pylintrc; fi
-  - coverage run --source=devourer -m devourer.tests && coverage report -m
-  # skipping docs on 3.3 since Sphinx dropped support
-  - if [[ $TRAVIS_PYTHON_VERSION != '3.3' ]]; then cd docs && make html; fi
+  - pylint rest_easy --rcfile=.pylintrc; fi
+  - coverage run --source=rest_easy -m rest_easy.tests
