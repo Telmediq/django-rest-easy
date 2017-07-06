@@ -6,5 +6,5 @@ python:
   - "3.5"
   - "3.6"
 script:
-  - pylint rest_easy --rcfile=.pylintrc; fi
+  - pylint rest_easy --rcfile=.pylintrc
   - coverage run --source=rest_easy -m rest_easy.tests
