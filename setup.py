@@ -1,10 +1,9 @@
-from distutils.core import setup
+from setuptools import setup
 
 setup(
-    name='rest_easy',
+    name='django-rest-easy',
     packages=['rest_easy'],
     version='0.1.0',
-    download_url='https://github.com/telmediq/django-rest-easy/tarball/0.1.0',
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, <4',
     install_requires=[
         'django>=1.8.0',
