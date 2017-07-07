@@ -1,4 +1,5 @@
 # coding: utf-8
+# pylint: disable=too-few-public-methods
 """
 This module provides redefined DRF's generic views and viewsets leveraging serializer registration.
 
@@ -60,6 +61,20 @@ from rest_easy.registers import serializer_register
 from rest_easy.scopes import ScopeQuerySet
 
 
+def get_additional_bases():
+    """
+    Looks for additional view bases in settings.REST_EASY_VIEW_BASES
+    :return:
+    """
+    resolved_bases = []
+    from importlib import import_module
+    for base in getattr(settings, 'REST_EASY_VIEW_BASES', []):
+        mod, cls = base.rsplit('.', 1)
+        resolved_bases.append(getattr(import_module(mod), cls))
+
+    return resolved_bases
+
+
 class ScopedViewMixin(object):
     """
     This class provides a get_queryset method that works with ScopeQuerySet.
@@ -82,28 +97,12 @@ class ScopedViewMixin(object):
         return queryset
 
 
-class ViewEasyMetaclass(type):
+class ViewEasyMetaclass(type):  # pylint: disable=too-few-public-methods
     """
     This metaclass sets default queryset on a model-and-schema based views and fills in concrete views with bases.
 
     It's required for compatibility with some of DRF's elements, like routers.
     """
-    resolved_bases = None
-
-    @classmethod
-    def get_additional_bases(mcs):
-        """
-        Looks for additional view bases in settings.REST_EASY_VIEW_BASES
-        :return:
-        """
-        if mcs.resolved_bases is None:
-            mcs.resolved_bases = []
-            from importlib import import_module
-            for base in getattr(settings, 'REST_EASY_VIEW_BASES', []):
-                mod, cls = base.rsplit('.', 1)
-                mcs.resolved_bases.append(getattr(import_module(mod), cls))
-
-        return mcs.resolved_bases
 
     def __new__(mcs, name, bases, attrs):
         """
@@ -111,10 +110,8 @@ class ViewEasyMetaclass(type):
         """
         if ('queryset' not in attrs or attrs['queryset'] is None) and 'model' in attrs:
             attrs['queryset'] = attrs['model'].objects.all()
-        if (not attrs.get('__abstract__', False)) and 'parent' in attrs and isinstance(attrs['parent'], ScopeQuerySet):
+        if (not attrs.get('__abstract__', False)) and 'scope' in attrs and isinstance(attrs['scope'], ScopeQuerySet):
             attrs['scope'] = [attrs['scope']]
-        if not attrs.get('__abstract__', False):
-            bases = tuple(mcs.get_additional_bases() + list(bases))
         return super(ViewEasyMetaclass, mcs).__new__(mcs, name, bases, attrs)
 
 
@@ -208,7 +205,7 @@ class GenericAPIViewBase(ScopedViewMixin, generics.GenericAPIView):
         ))
 
 
-class GenericAPIView(with_metaclass(ViewEasyMetaclass, GenericAPIViewBase)):
+class GenericAPIView(with_metaclass(ViewEasyMetaclass, GenericAPIViewBase, *get_additional_bases())):
     """
     Base view with compat metaclass.
     """
