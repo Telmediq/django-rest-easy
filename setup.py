@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='django-rest-easy',
     packages=['rest_easy'],
-    version='0.1.1',
+    version='0.1.2',
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4',
     install_requires=[
         'django>=1.8.0',
