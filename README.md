@@ -55,13 +55,14 @@ Contributions
 
 Please read CONTRIBUTORS file before submitting a pull request.
 
-We use Travis CI. The targets are 10.00 for lint and 100% for coverage, as well as building sphinx docs.
+We use Travis CI. The targets are 10.00 for lint and non-decreasing coverage (currently at 80%, but I'm aiming to
+slowly get to 100%), as well as building sphinx docs.
 
 You can also check the build manually, just make sure to `pip install -r requirements.txt` before:
 
 ```
 pylint rest_easy --rcfile=.pylintrc
-coverage run --source=rest_easy -m rest_easy.tests && coverage report -m
+coverage run --source=rest_easy -m rest_easy.runtests && coverage report -m
 sphinx-apidoc -o docs/auto rest_easy -f
 cd docs && make html
 ```
@@ -73,5 +74,5 @@ radon cc rest_easy
 radon mi rest_easy
 ```
 
-The target is A for maintenance index, C for cyclomatic complexity - but don't worry if it isn't met, I can
+The target is A for maintenance index, B for cyclomatic complexity - but don't worry if it isn't met, I can
 refactor it after merging.

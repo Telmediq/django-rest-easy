@@ -1,7 +1,7 @@
 # coding: utf-8
 # pylint: skip-file
 """
-Tests for django-rest-easy. So far not ported from proprietary code.
+Tests for django-rest-easy.
 """
 from __future__ import unicode_literals
 

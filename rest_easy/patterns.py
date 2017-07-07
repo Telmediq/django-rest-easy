@@ -159,6 +159,29 @@ class RegisteredCreator(type):
                     yield item, getattr(base, item)
 
     @classmethod
+    def process_required_field(mcs, missing, fields, name, value):
+        """
+        Processes a single required field to check if it applies to constraints.
+        """
+        try:
+            if not hasattr(fields, name) and name not in fields:
+                missing.append(name)
+                return
+        except TypeError:
+            missing.append(name)
+            return
+        if value:
+            if hasattr(fields, name):
+                inner = getattr(fields, name)
+            else:
+                inner = fields[name]
+            if callable(value):
+                if not value(inner):
+                    missing += [name]
+            else:
+                missing += [name + '.' + item for item in mcs.get_missing_fields(value, inner)]
+
+    @classmethod
     def get_missing_fields(mcs, required_fields, fields):
         """
         Lists required fields that are missing.
@@ -185,23 +208,7 @@ class RegisteredCreator(type):
 
         missing = []
         for name, value in required_fields.items():
-            try:
-                if not hasattr(fields, name) and name not in fields:
-                    missing.append(name)
-                    continue
-            except TypeError:
-                missing.append(name)
-                continue
-            if value:
-                if hasattr(fields, name):
-                    inner = getattr(fields, name)
-                else:
-                    inner = fields[name]
-                if callable(value):
-                    if not value(inner):
-                        missing += [name]
-                else:
-                    missing += [name + '.' + item for item in mcs.get_missing_fields(value, inner)]
+            mcs.process_required_field(missing, fields, name, value)
         return missing
 
     @classmethod
