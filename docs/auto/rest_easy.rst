@@ -44,10 +44,26 @@ rest\_easy\.registers module
     :undoc-members:
     :show-inheritance:
 
+rest\_easy\.scopes module
+-------------------------
+
+.. automodule:: rest_easy.scopes
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 rest\_easy\.serializers module
 ------------------------------
 
 .. automodule:: rest_easy.serializers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+rest\_easy\.tests module
+------------------------
+
+.. automodule:: rest_easy.tests
     :members:
     :undoc-members:
     :show-inheritance:
