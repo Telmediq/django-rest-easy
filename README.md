@@ -23,9 +23,8 @@ from users import User
 class MessageSerializer(ModelSerializer):
     class Meta:
         model = Message
+        schema = 'default'
         fields = '__all__'
-
-    schema = StaticField('default')
 
 class MessageViewSet(ModelViewSet):
     model = Message
@@ -37,7 +36,7 @@ router.register(r'users/(?P<user_pk>\d+)/messages', MessageViewSet)
 
 Installation
 ------------
-`pip install django-rest-easy`
+`pip install django-rest-easy` and add rest_easy to installed apps in Django settings.
 
 Documentation
 -------------
