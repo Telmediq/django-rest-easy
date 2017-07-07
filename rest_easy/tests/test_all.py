@@ -5,76 +5,18 @@ Tests for django-rest-easy. So far not ported from proprietary code.
 """
 from __future__ import unicode_literals
 
-import unittest
-
-from django.conf import settings
-from django.db import models
-
-settings.configure(DEBUG_PROPAGATE_EXCEPTIONS=True,
-                   DATABASES={
-                       'default': {
-                           'ENGINE': 'django.db.backends.sqlite3',
-                           'NAME': ':memory:'
-                       }
-                   },
-                   SITE_ID=1,
-                   SECRET_KEY='not very secret in tests',
-                   USE_I18N=True,
-                   USE_L10N=True,
-                   STATIC_URL='/static/',
-                   ROOT_URLCONF='tests.urls',
-                   TEMPLATES=[
-                       {
-                           'BACKEND': 'django.template.backends.django.DjangoTemplates',
-                           'APP_DIRS': True,
-                       },
-                   ],
-                   MIDDLEWARE_CLASSES=(
-                       'django.middleware.common.CommonMiddleware',
-                       'django.contrib.sessions.middleware.SessionMiddleware',
-                       'django.contrib.auth.middleware.AuthenticationMiddleware',
-                       'django.contrib.messages.middleware.MessageMiddleware',
-                   ),
-                   INSTALLED_APPS=(
-                       'django.contrib.auth',
-                       'django.contrib.contenttypes',
-                       'django.contrib.sessions',
-                       'django.contrib.sites',
-                       'django.contrib.staticfiles',
-                       'rest_framework',
-                       'rest_easy',
-                   ),
-                   PASSWORD_HASHERS=(
-                       'django.contrib.auth.hashers.MD5PasswordHasher',
-                   ))
-try:
-    import django
-    django.setup()
-except AttributeError:
-    pass
+from django.http import Http404
+from django.test import TestCase
 
 from rest_easy.exceptions import RestEasyException
-from rest_easy.models import deserialize_data, SerializableMixin
+from rest_easy.models import deserialize_data
 from rest_easy.serializers import ModelSerializer
 from rest_easy.views import ModelViewSet
-from rest_easy.scopes import ScopeQuerySet
+from rest_easy.scopes import ScopeQuerySet, UrlKwargScopeQuerySet
+from rest_easy.tests.models import *
 
 
-class MockModel(SerializableMixin, models.Model):
-    class Meta:
-        app_label = 'rest_easy'
-
-    value = models.CharField(max_length=50)
-
-
-class MockModel2(SerializableMixin, models.Model):
-    class Meta:
-        app_label = 'rest_easy'
-
-    value = models.CharField(max_length=50)
-
-
-class BaseTestCase(unittest.TestCase):
+class BaseTestCase(TestCase):
     def setUp(self):
         pass
 
@@ -157,7 +99,6 @@ class TestModels(BaseTestCase):
 
     def test_deserialize_success(self):
         data = {'model': 'rest_easy.MockModel', 'schema': 'default', 'value': 'zxc'}
-        from rest_easy.registers import serializer_register
         validated = deserialize_data(data)
         self.assertEqual(validated, {'value': data['value']})
 
@@ -166,7 +107,7 @@ class TestModels(BaseTestCase):
         self.assertRaises(RestEasyException, lambda: deserialize_data(data))
 
 
-class TestViews(unittest.TestCase):
+class TestViews(BaseTestCase):
     def test_missing_fields(self):
         class FailingViewSet(ModelViewSet):
             pass
@@ -192,5 +133,41 @@ class TestViews(unittest.TestCase):
         self.assertRaises(NotImplementedError, TaggableViewSet().get_queryset)
 
 
-if __name__ == '__main__':
-    unittest.main()
+class Container(object):
+    pass
+
+
+class TestScopeQuerySet(BaseTestCase):
+    def setUp(self):
+        self.account = Account.objects.create()
+        self.other_account = Account.objects.create()
+        self.user = User.objects.create(account=self.account)
+        self.other_user = User.objects.create(account=self.other_account)
+
+    def test_chaining(self):
+        self.assertRaises(NotImplementedError, lambda: UrlKwargScopeQuerySet(Account,
+                                                                             parent=ScopeQuerySet(Account)
+                                                                             ).child_queryset(None, None))
+
+    def test_url_kwarg(self):
+        view = Container()
+        view.kwargs = {'account_pk': self.other_account.pk}
+
+        qs = UrlKwargScopeQuerySet(Account).child_queryset(User.objects.all(), view)
+        self.assertIn(self.other_user, list(qs))
+        self.assertEqual(1, len(list(qs)))
+
+    def test_none(self):
+        view = Container()
+        view.kwargs = {'account_pk': self.other_account.pk + 100}
+
+        qs = UrlKwargScopeQuerySet(Account).child_queryset(User.objects.all(), view)
+        self.assertEqual(0, len(list(qs)))
+
+    def test_raises(self):
+        view = Container()
+        view.kwargs = {'account_pk': self.other_account.pk + 100}
+
+        self.assertRaises(Http404,
+                          lambda: UrlKwargScopeQuerySet(Account,
+                                                        raise_404=True).child_queryset(User.objects.all(), view))

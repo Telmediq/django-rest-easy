@@ -55,6 +55,9 @@ docs/_build/
 # PyBuilder
 target/
 
+# Setuptools
+build/
+
 # JetBrains
 .idea/
 

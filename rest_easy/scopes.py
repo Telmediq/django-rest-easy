@@ -53,7 +53,7 @@ class ScopeQuerySet(object):
         self.parent_field = parent_field
         self.related_field = related_field
         self.raise_404 = raise_404
-        self.parent = [parent] if isinstance(parent, ScopeQuerySet) else parent
+        self.parent = ([parent] if isinstance(parent, ScopeQuerySet) else parent) or []
         self.allow_none = allow_none
 
     def get_value(self, view):
@@ -71,8 +71,8 @@ class ScopeQuerySet(object):
         :return: queryset instance.
         """
         queryset = self.queryset
-        if self.parent:
-            queryset = self.parent.child_queryset(queryset, view)
+        for parent in self.parent:
+            queryset = parent.child_queryset(queryset, view)
         return queryset
 
     def get_object(self, view):
