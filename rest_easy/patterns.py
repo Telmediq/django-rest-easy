@@ -184,7 +184,7 @@ class RegisteredCreator(type):
             return [field for field in required_fields if field not in fields or not field]
 
         missing = []
-        for name, value in required_fields.iteritems():
+        for name, value in required_fields.items():
             try:
                 if not hasattr(fields, name) and name not in fields:
                     missing.append(name)

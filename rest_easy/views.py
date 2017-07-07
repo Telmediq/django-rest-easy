@@ -99,7 +99,7 @@ class ViewEasyMetaclass(type):
         if mcs.resolved_bases is None:
             mcs.resolved_bases = []
             from importlib import import_module
-            for base in getattr(settings, 'REST_EASY_VIEW_BASES'):
+            for base in getattr(settings, 'REST_EASY_VIEW_BASES', []):
                 mod, cls = base.rsplit('.', 1)
                 mcs.resolved_bases.append(getattr(import_module(mod), cls))
 

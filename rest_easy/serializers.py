@@ -112,25 +112,22 @@ class SerializerCreator(RegisteredCreator, SerializerMetaclass):
         return name, bases, attrs
 
 
-class RegisterableSerializerMixin(object):  # pylint: disable=too-few-public-methods
+class RegisterableSerializerMixin(six.with_metaclass(SerializerCreator, object)):  # pylint: disable=too-few-public-methods
     """
     A mixin to be used if you want to inherit functionality from non-standard DRF serializer.
     """
-    __metaclass__ = SerializerCreator
     __abstract__ = True
 
 
-class Serializer(OSerializer):  # pylint: disable=too-few-public-methods,abstract-method
+class Serializer(six.with_metaclass(SerializerCreator, OSerializer)):  # pylint: disable=too-few-public-methods,abstract-method
     """
     Registered version of DRF's Serializer.
     """
-    __metaclass__ = SerializerCreator
     __abstract__ = True
 
 
-class ModelSerializer(OModelSerializer):  # pylint: disable=too-few-public-methods,abstract-method
+class ModelSerializer(six.with_metaclass(SerializerCreator, OModelSerializer)):  # pylint: disable=too-few-public-methods,abstract-method
     """
     Registered version of DRF's ModelSerializer.
     """
-    __metaclass__ = SerializerCreator
     __abstract__ = True
