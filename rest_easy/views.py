@@ -112,8 +112,9 @@ class ViewEasyMetaclass(type):
         if ('queryset' not in attrs or attrs['queryset'] is None) and 'model' in attrs:
             attrs['queryset'] = attrs['model'].objects.all()
         if (not attrs.get('__abstract__', False)) and 'parent' in attrs and isinstance(attrs['parent'], ScopeQuerySet):
-            attrs['parent'] = [attrs['parent']]
-        bases = tuple(mcs.get_additional_bases() + list(bases))
+            attrs['scope'] = [attrs['scope']]
+        if not attrs.get('__abstract__', False):
+            bases = tuple(mcs.get_additional_bases() + list(bases))
         return super(ViewEasyMetaclass, mcs).__new__(mcs, name, bases, attrs)
 
 
