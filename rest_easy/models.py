@@ -7,10 +7,6 @@ Its contents can be used to serialize a model or find proper serializer/deserial
 
 from __future__ import unicode_literals
 
-import json
-
-import six
-
 from rest_easy.exceptions import RestEasyException
 from rest_easy.registers import serializer_register
 
