@@ -3,6 +3,7 @@
 Django-rest-easy provides base classes for API views and serializers.
 
 To leverage the QOL features of django-rest-easy, you should use the followint base classes for your serializers:
+
 * :class:`rest_easy.serializers.Serializer`
 * :class:`rest_easy.serializers.ModelSerializer`
 
@@ -23,8 +24,12 @@ The classes from this module don't disable any behaviour inherent to Django Rest
 there will be possible with the django-rest-easy base classes.
 
 Uses followint settings:
-REST_EASY_AUTOIMPORT_SERIALIZERS_FROM - for autoimporting serializers.
-REST_EASY_VIEW_BASES - for prepending bases to generic views.
+
+* REST_EASY_AUTOIMPORT_SERIALIZERS_FROM - for autoimporting serializers.
+* REST_EASY_VIEW_BASES - for prepending bases to generic views.
+* REST_EASY_SERIALIZER_CONFLICT_POLICY - what happens when serializer with same model and schema is redefined. Defaults
+  to 'allow', can also be 'raise' - in the former case the new serializer will replace the old one. Allow is used
+  to make sure that any import craziness is not creating issues by default.
 """
 from django.apps import AppConfig
 from django.conf import settings
@@ -79,12 +84,12 @@ class ApiConfig(AppConfig):
                     # attempting to import it, otherwise we want it to bubble up.
                     curr = mod
                     curr_path = app
-                    for part in item.split('.'):
+                    for part in item.split('.'):  # pragma: no cover
                         if not module_has_submodule(curr, part):
                             break
                         curr_path += '.' + part
                         curr = import_module(curr_path)
-                    else:
+                    else:  # pragma: no cover
                         raise
 
     def ready(self):

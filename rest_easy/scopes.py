@@ -140,12 +140,14 @@ class RequestAttrScopeQuerySet(ScopeQuerySet):
     ScopeQuerySet that obtains parent object from view's request property.
 
     It can work two-fold:
+
     * the request's property contains full object: in this case no filtering of parent's queryset is required. When
-     using such approach, is_object must be set to True, and qs_or_obj can be None. Chaining will be disabled since it
-     is inherent to filtering process.
+      using such approach, is_object must be set to True, and qs_or_obj can be None. Chaining will be disabled since it
+      is inherent to filtering process.
     * the request's property contains object's id, uuid, or other unique property. In that case is_object needs to be
-     explicitly set to False, and qs_or_obj needs to be a Django model or queryset. Chaining will be performed as
-     usually.
+      explicitly set to False, and qs_or_obj needs to be a Django model or queryset. Chaining will be performed as
+      usually.
+
     """
 
     def __init__(self, *args, **kwargs):

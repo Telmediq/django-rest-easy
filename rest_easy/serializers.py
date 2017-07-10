@@ -9,6 +9,7 @@ and model fields. This affects both regular and model serializers.
 
 Additional benefit of using such metaclass is serializer registration - we can easily obtain serializers based on
 model (or None for non-model serializers) and schema from anywhere in the application. That's useful in several cases:
+
 * model serialization
 * remote data deserialization (no changes to (de)serialization logic required when we add a new schema)
 * simpler views and viewsets

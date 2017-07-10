@@ -80,15 +80,13 @@ def get_serializer(data):
 
 def deserialize_data(data):
     """
-    Deserialize dict-like or json data.
+    Deserialize dict-like data.
 
     This function will obtain correct serializer from :class:`rest_easy.registers.SerializerRegister`
     using :func:`rest_easy.models.get_serializer`.
     :param data: dict-like object or json string.
     :return: Deserialized, validated data.
     """
-    if isinstance(data, six.string_types):
-        data = json.loads(data)
     serializer = get_serializer(data)(data=data)
     serializer.is_valid(raise_exception=True)
     return serializer.validated_data

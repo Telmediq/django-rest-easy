@@ -6,6 +6,8 @@ required byt django-rest-easy, namely singleton and register.
 from functools import wraps
 from six import with_metaclass
 
+from rest_easy.exceptions import RestEasyException
+
 
 class SingletonCreator(type):
     """
@@ -15,22 +17,22 @@ class SingletonCreator(type):
     """
 
     @staticmethod
-    def singleton_decorator(function):
+    def singleton_decorator(func):
         """
         We embed given function into checking if the first (zeroth) parameter of its call
         shall be initialised.
-        :param function: instantiating function (usually __init__).
+        :param func: instantiating function (usually __init__).
         :returns: embedded function function.
         """
 
-        @wraps(function)
+        @wraps(func)
         def wrapper(*args, **kwargs):
             """
             This inner function checks init property of given instance and depending on its
             value calls the function or not.
             """
             if args[0].sl_init:
-                return function(*args, **kwargs)
+                return func(*args, **kwargs)
 
         return wrapper
 
@@ -80,16 +82,27 @@ class BaseRegister(Singleton):
 
     conflict_policy is a setting deciding what to do in case of name collision (registering another
     entity with the same name). It should be one of:
+
     * allow - replace old entry with new entry, return True,
     * deny - leave old entry, return False,
-    * raise - raise ValueError.
+    * raise - raise RestEasyException.
 
     Default policy is raise.
 
     As this is a singleton, instantiating a particular children class in any place will yield the exact same data
     as the register instance used in RegisteredCreator().
     """
-    conflict_policy = 'raise'
+    conflict_policy = 'allow'
+
+    @classmethod
+    def get_conflict_policy(cls):
+        """
+        Obtain conflict policy from django settings or use default.
+
+        Allowed settings are 'raise' and 'allow'. Default is 'raise'.
+        """
+        from django.conf import settings
+        return getattr(settings, 'REST_EASY_SERIALIZER_CONFLICT_POLICY', cls.conflict_policy)
 
     def __init__(self):
         """
@@ -105,12 +118,11 @@ class BaseRegister(Singleton):
         :param ref: entry value (probably class).
         :returns: True if model was added just now, False if it was already in the register.
         """
-        if not self.lookup(name) or self.conflict_policy == 'allow':
+        if not self.lookup(name) or self.get_conflict_policy() == 'allow':
             self._entries[name] = ref
             return True
-        elif self.conflict_policy == 'raise':
-            raise ValueError('Entry named {} is already registered.'.format(name))
-        return False
+        else:
+            raise RestEasyException('Entry named {} is already registered.'.format(name))
 
     def lookup(self, name):
         """
@@ -188,14 +200,14 @@ class RegisteredCreator(type):
 
         Supports two formats of input of required fields: either a simple set {'a', 'b'} or a dict with several
         options:
-        {
-            'nested': {
-                'presence_check_only': None,
-                'functional_check': lambda value: isinstance(value, Model)
-            },
-            'flat_presence_check': None,
-            'flat_functional_check': lambda value: isinstance(value, Model)
-        }
+        >>> {
+        >>>     'nested': {
+        >>>         'presence_check_only': None,
+        >>>         'functional_check': lambda value: isinstance(value, Model)
+        >>>     },
+        >>>     'flat_presence_check': None,
+        >>>     'flat_functional_check': lambda value: isinstance(value, Model)
+        >>> }
         Functional checks need to return true for field not to be marked as missing.
         Dict-format also supports both dict and attribute based accesses for fields (fields['a'] and fields.a).
 
@@ -248,7 +260,7 @@ class RegisteredCreator(type):
         if not attrs.get('__abstract__', False):
             missing = mcs.get_missing_fields(mcs.required_fields, attrs)
             if missing:
-                raise AttributeError(
+                raise RestEasyException(
                     'The following mandatory fields are missing from {} class definition: {}'.format(
                         name,
                         ', '.join(missing)
@@ -256,11 +268,9 @@ class RegisteredCreator(type):
                 )
             name, bases, attrs = mcs.pre_register(name, bases, attrs)
             slug = mcs.get_name(name, bases, attrs)
-            cls = mcs.register.lookup(slug)
-            if not cls:
-                cls = super(RegisteredCreator, mcs).__new__(mcs, name, bases, attrs)
-                mcs.register.register(slug, cls)
-                mcs.post_register(cls, name, bases, attrs)
+            cls = super(RegisteredCreator, mcs).__new__(mcs, name, bases, attrs)
+            mcs.register.register(slug, cls)
+            mcs.post_register(cls, name, bases, attrs)
         else:
             cls = super(RegisteredCreator, mcs).__new__(mcs, name, bases, attrs)
         return cls
