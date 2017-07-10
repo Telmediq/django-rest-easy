@@ -5,6 +5,7 @@ Tests for django-rest-easy.
 """
 from __future__ import unicode_literals
 
+import six
 from django.conf import settings
 from django.http import Http404
 from django.test import TestCase
@@ -184,8 +185,11 @@ class TestCreator(BaseTestCase):
 
         RegisteredCreator.inherit_fields = True
         RegisteredCreator.register = BaseRegister()
-        test = RegisteredCreator('Test', (Mock, ), {})
-        self.assertEqual(Mock.a, test.a)
+
+        class Test(six.with_metaclass(RegisteredCreator, Mock)):
+            pass
+
+        self.assertEqual(Mock.a, Test.a)
         RegisteredCreator.inherit_fields = False
 
 
