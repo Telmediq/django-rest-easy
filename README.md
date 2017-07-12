@@ -14,29 +14,41 @@ It enables:
 ### Basic usage
 
 ```python
+from django.conf.urls import include, url
+from rest_framework.routers import DefaultRouter
+
 from rest_easy.serializers import ModelSerializer
-from rest_easy.views import ModelViewSet, UrlKwargScopeQuerySet
+from rest_easy.views import ModelViewSet
+from rest_easy.scopes import UrlKwargScopeQuerySet
+from rest_easy.tests.models import Account, User
 
-from messages import Message
-from users import User
-
-class MessageSerializer(ModelSerializer):
+class UserSerializer(ModelSerializer):
     class Meta:
-        model = Message
+        model = User
         schema = 'default'
         fields = '__all__'
 
-class MessageViewSet(ModelViewSet):
-    model = Message
+class UserViewSet(ModelViewSet):
+    model = User
     schema = 'default'
-    scope = UrlKwargScopeQuerySet(User)
+    lookup_url_kwarg = 'pk'
+    scope = UrlKwargScopeQuerySet(Account)
 
-router.register(r'users/(?P<user_pk>\d+)/messages', MessageViewSet)
+router = DefaultRouter()
+router.register(r'users/(?P<user_pk>\d+)/messages', UserViewSet)
+
+urlpatterns = [url(r'^', include(router.urls))]
 ```
 
 Installation
 ------------
 `pip install django-rest-easy` and add rest_easy to installed apps in Django settings.
+
+The settings used are:
+
+* REST_EASY_AUTOIMPORT_SERIALIZERS_FROM
+* REST_EASY_VIEW_BASES
+* REST_EASY_SERIALIZER_CONFLICT_POLICY
 
 Documentation
 -------------
