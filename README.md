@@ -55,8 +55,8 @@ Contributions
 
 Please read CONTRIBUTORS file before submitting a pull request.
 
-We use Travis CI. The targets are 10.00 for lint and non-decreasing coverage (currently at 90%, but I'm aiming to
-slowly get to 100%), as well as building sphinx docs.
+We use Travis CI. The targets are 10.00 for lint and non-decreasing coverage (currently at 100%), as well as
+building sphinx docs.
 
 You can also check the build manually, just make sure to `pip install -r requirements.txt` before:
 

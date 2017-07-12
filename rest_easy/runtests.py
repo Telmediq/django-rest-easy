@@ -11,6 +11,7 @@ import sys
 from django.conf import settings
 import django
 
+
 if __name__ == '__main__':
     settings.configure(DEBUG_PROPAGATE_EXCEPTIONS=True,
                        DATABASES={
@@ -48,7 +49,8 @@ if __name__ == '__main__':
                        ),
                        PASSWORD_HASHERS=(
                            'django.contrib.auth.hashers.MD5PasswordHasher',
-                       ))
+                       ),
+                       REST_EASY_VIEW_BASES=['rest_easy.tests.mixins.EmptyMixin'])
     django.setup()
 
     parent = os.path.dirname(os.path.abspath(__file__))

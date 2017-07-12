@@ -38,7 +38,7 @@ class ScopeQuerySet(object):
         """
         if isinstance(qs_or_obj, QuerySet):
             self.queryset = qs_or_obj
-        elif issubclass(qs_or_obj, Model):
+        elif isinstance(qs_or_obj, type) and issubclass(qs_or_obj, Model):
             self.queryset = qs_or_obj.objects.all()
         elif qs_or_obj is None:
             self.queryset = None

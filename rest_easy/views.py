@@ -85,11 +85,8 @@ class ScopedViewMixin(object):
         """
         queryset = super(ScopedViewMixin, self).get_queryset()
         if hasattr(self, 'scope'):
-            if isinstance(self.scope, ScopeQuerySet):
-                queryset = self.scope.child_queryset(queryset, self)
-            else:
-                for scope in self.scope:
-                    queryset = scope.child_queryset(queryset, self)
+            for scope in self.scope:
+                queryset = scope.child_queryset(queryset, self)
         return queryset
 
 
@@ -153,8 +150,8 @@ class GenericAPIViewBase(ScopedViewMixin, generics.GenericAPIView):
         if method == 'get':
             if self.lookup_url_kwarg in self.kwargs:
                 return 'retrieve'
-            return 'list'
         mapping = {
+            'get': 'list',
             'post': 'create',
             'put': 'update',
             'patch': 'partial_update',

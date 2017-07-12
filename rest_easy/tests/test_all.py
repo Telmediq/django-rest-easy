@@ -14,8 +14,8 @@ from rest_easy.exceptions import RestEasyException
 from rest_easy.models import deserialize_data
 from rest_easy.patterns import SingletonCreator, Singleton, SingletonBase, RegisteredCreator, BaseRegister
 from rest_easy.registers import serializer_register
-from rest_easy.scopes import ScopeQuerySet, UrlKwargScopeQuerySet
-from rest_easy.serializers import ModelSerializer
+from rest_easy.scopes import ScopeQuerySet, UrlKwargScopeQuerySet, RequestAttrScopeQuerySet
+from rest_easy.serializers import ModelSerializer, SerializerCreator
 from rest_easy.tests.models import *
 from rest_easy.views import ModelViewSet
 
@@ -125,15 +125,6 @@ class SingletonTest(BaseTestCase):
                 """
                 self.test = self.test + 1 if hasattr(self, 'test') else param
                 self.var = None
-
-            @classmethod
-            def get_instance(cls):
-                """
-                This functions allows us an insight into class instances dict.
-                :return: instances dict
-                """
-                return cls._instance
-
         cls.Test = Test
 
     def test_same(self):
@@ -155,7 +146,7 @@ class TestCreator(BaseTestCase):
             a = 1
             b = 2
 
-            def c(self):
+            def c(self):  # pragma: no coverage
                 pass
 
         fields = list(RegisteredCreator.get_fields_from_base(A))
@@ -192,6 +183,18 @@ class TestCreator(BaseTestCase):
         self.assertEqual(Mock.a, Test.a)
         RegisteredCreator.inherit_fields = False
 
+    def test_serializer_field_inheritance(self):
+        class Mock(object):
+            a = {}
+
+        SerializerCreator.inherit_fields = True
+
+        class Test(six.with_metaclass(SerializerCreator, Mock)):
+            __abstract__ = True
+
+        self.assertEqual(Mock.a, Test.a)
+        SerializerCreator.inherit_fields = False
+
 
 class TestSerializers(BaseTestCase):
     def testModelSerializerMissingFields(self):
@@ -219,12 +222,14 @@ class TestSerializers(BaseTestCase):
     def testModelSerializerAutoFields(self):
         class MockSerializer(ModelSerializer):
             class Meta:
-                fields = '__all__'
+                fields = ('value', )
                 model = MockModel
                 schema = 'default'
 
         self.assertTrue(MockSerializer._declared_fields['model'].value == 'rest_easy.MockModel')
         self.assertTrue(MockSerializer._declared_fields['schema'].value == 'default')
+        self.assertIn('model', MockSerializer.Meta.fields)
+        self.assertIn('schema', MockSerializer.Meta.fields)
 
     def testRegisterDuplication(self):
         def create():
@@ -240,6 +245,10 @@ class TestSerializers(BaseTestCase):
         settings.REST_EASY_SERIALIZER_CONFLICT_POLICY = 'allow'
         ms = create()
         self.assertIn((serializer_register.get_name(MockModel, 'default'), ms), serializer_register.entries())
+        self.assertEqual(serializer_register.get(MockModel, 'default'), ms)
+
+    def testRegisterAttributes(self):
+        self.assertRaises(RestEasyException, lambda: serializer_register.get(object, 'schema'))
 
     def testModelSerializerAutoFieldsNoneModel(self):
         class MockSerializer(ModelSerializer):
@@ -314,12 +323,104 @@ class TestViews(BaseTestCase):
         self.assertEqual(TaggableViewSet.queryset.model, MockModel)
         self.assertEqual(AccountViewSet.queryset.model, MockModel2)
 
-    def test_parent(self):
+    def test_scope_fails(self):
         class TaggableViewSet(ModelViewSet):
             model = MockModel
             scope = ScopeQuerySet(MockModel2)
 
         self.assertRaises(NotImplementedError, TaggableViewSet().get_queryset)
+
+    def test_scope(self):
+        class UserViewSet(ModelViewSet):
+            model = User
+            scope = UrlKwargScopeQuerySet(Account)
+        vs = UserViewSet()
+        vs.kwargs = {'account_pk': 1}
+        self.assertEqual(0, vs.get_queryset().count())
+
+    def test_performs(self):
+        class UserViewSet(ModelViewSet):
+            model = User
+            scope = UrlKwargScopeQuerySet(Account)
+
+        class Serializer(object):
+            def __init__(self, case, param):
+                self.case = case
+                self.param = param
+
+            def save(self, param):
+                self.case.assertEqual(param, self.param)
+
+        s = Serializer(self, 'create')
+        vs = UserViewSet()
+        vs.perform_create(s, param='create')
+        s.param = 'update'
+        vs.perform_update(s, param='update')
+
+    def test_serializer_class(self):
+        class UserSerializer(ModelSerializer):
+            class Meta:
+                model = User
+                schema = 'default'
+                fields = '__all__'
+
+        class UserRetrieveSerializer(ModelSerializer):
+            class Meta:
+                model = User
+                schema = 'default-retrieve'
+                fields = '__all__'
+
+        class UserListSerializer(ModelSerializer):
+            class Meta:
+                model = User
+                schema = 'default-list'
+                fields = '__all__'
+
+        class UserViewSet(ModelViewSet):
+            model = User
+            schema = 'default'
+            serializer_schema_for_verb = {'retrieve': 'default-retrieve', 'list': 'default-list'}
+            lookup_url_kwarg = 'pk'
+
+        class UserViewSet2(ModelViewSet):
+            serializer_class = UserSerializer
+
+        vs = UserViewSet()
+        vs.request = Container()
+
+        # retrieve
+        vs.kwargs = {'pk': 1}
+        vs.request.method = 'get'
+        self.assertEqual(vs.get_serializer_class(), UserRetrieveSerializer)
+        # list
+        vs.kwargs = {}
+        self.assertEqual(vs.get_serializer_class(), UserListSerializer)
+        #default
+        vs.request.method = 'put'
+        self.assertEqual(vs.get_serializer_class(), UserSerializer)
+        #queryset
+        vs = UserViewSet2()
+        self.assertEqual(vs.get_serializer_class(), UserSerializer)
+
+    def test_serializer_class_failing(self):
+        class UserViewSet(ModelViewSet):
+            model = User
+
+        class UserViewSet2(ModelViewSet):
+            pass
+
+        vs = UserViewSet()
+        vs.request = Container()
+        vs.kwargs = {'pk': 1}
+        vs.request.method = 'get'
+        self.assertRaises(RestEasyException, vs.get_serializer_class)
+
+        vs = UserViewSet2()
+        vs.request = Container()
+        vs.kwargs = {'pk': 1}
+        vs.request.method = 'get'
+        self.assertRaises(RestEasyException, vs.get_serializer_class)
+
 
 
 class Container(object):
@@ -335,14 +436,37 @@ class TestScopeQuerySet(BaseTestCase):
 
     def test_chaining(self):
         self.assertRaises(NotImplementedError, lambda: UrlKwargScopeQuerySet(Account,
-                                                                             parent=ScopeQuerySet(Account)
+                                                                             parent=ScopeQuerySet(Account.objects.all())
                                                                              ).child_queryset(None, None))
+
+    def test_creation_fails(self):
+        self.assertRaises(RestEasyException, lambda: ScopeQuerySet(object))
+        self.assertRaises(RestEasyException, lambda: ScopeQuerySet(None))
+        self.assertRaises(RestEasyException, lambda: UrlKwargScopeQuerySet(None, related_field='a'))
+        self.assertRaises(RestEasyException, lambda: RequestAttrScopeQuerySet(None))
+        self.assertRaises(RestEasyException, lambda: RequestAttrScopeQuerySet(None, request_attr='a'))
 
     def test_url_kwarg(self):
         view = Container()
         view.kwargs = {'account_pk': self.other_account.pk}
 
         qs = UrlKwargScopeQuerySet(Account).child_queryset(User.objects.all(), view)
+        self.assertIn(self.other_user, list(qs))
+        self.assertEqual(1, len(list(qs)))
+
+    def test_request_attrs(self):
+        view = Container()
+        view.request = Container()
+        view.request.account = self.other_account.pk
+
+        qs = RequestAttrScopeQuerySet(Account, request_attr='account',
+                                      is_object=False).child_queryset(User.objects.all(), view)
+        self.assertIn(self.other_user, list(qs))
+        self.assertEqual(1, len(list(qs)))
+
+        view.request.account = self.other_account
+        qs = RequestAttrScopeQuerySet(Account, request_attr='account',
+                                      is_object=True).child_queryset(User.objects.all(), view)
         self.assertIn(self.other_user, list(qs))
         self.assertEqual(1, len(list(qs)))
 

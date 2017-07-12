@@ -103,7 +103,7 @@ class SerializerCreator(RegisteredCreator, SerializerMetaclass):
             attrs['model'] = StaticField(model_name)
         if 'schema' not in attrs:
             attrs['schema'] = StaticField(attrs['Meta'].schema)
-        if  hasattr(attrs['Meta'], 'fields'):
+        if hasattr(attrs['Meta'], 'fields'):
             if not isinstance(attrs['Meta'].fields, six.string_types):
                 attrs['Meta'].fields = list(attrs['Meta'].fields)
                 if 'model' not in attrs['Meta'].fields:
