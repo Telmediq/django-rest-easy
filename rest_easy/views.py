@@ -211,7 +211,7 @@ class GenericAPIViewBase(ScopedViewMixin, generics.GenericAPIView):
         if serializer:
             return serializer
 
-        raise RestEasyException('Serializer for model {} and schema {} cannot be found.'.format(
+        raise RestEasyException(u'Serializer for model {} and schema {} cannot be found.'.format(
             getattr(self, 'model', '[no model]'),
             getattr(self, 'schema', '[no schema]')
         ))
