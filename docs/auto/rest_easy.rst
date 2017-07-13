@@ -1,6 +1,13 @@
 rest\_easy package
 ==================
 
+Subpackages
+-----------
+
+.. toctree::
+
+    rest_easy.tests
+
 Submodules
 ----------
 
@@ -44,6 +51,14 @@ rest\_easy\.registers module
     :undoc-members:
     :show-inheritance:
 
+rest\_easy\.runtests module
+---------------------------
+
+.. automodule:: rest_easy.runtests
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 rest\_easy\.scopes module
 -------------------------
 
@@ -56,14 +71,6 @@ rest\_easy\.serializers module
 ------------------------------
 
 .. automodule:: rest_easy.serializers
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-rest\_easy\.tests module
-------------------------
-
-.. automodule:: rest_easy.tests
     :members:
     :undoc-members:
     :show-inheritance:

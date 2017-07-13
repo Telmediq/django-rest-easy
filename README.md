@@ -46,9 +46,18 @@ Installation
 
 The settings used are:
 
-* REST_EASY_AUTOIMPORT_SERIALIZERS_FROM
-* REST_EASY_VIEW_BASES
-* REST_EASY_SERIALIZER_CONFLICT_POLICY
+* REST_EASY_AUTOIMPORT_SERIALIZERS_FROM - specify modules or packages that rest-easy will try to import serializers
+  from when AppConfig is ready. The import is app-based, so it will search for serializers in all installed apps.
+  By default `['serializers']` 
+* REST_EASY_VIEW_BASES - your mixins that should go into all views near the end of the mro (before all DRF and
+  django-rest-easy's bases, after all generic mixins from DRF). 
+* REST_EASY_GENERIC_VIEW_MIXINS - your mixins that should go into all generic views at the beginning of the mro
+  (that means CreateAPIView, ListAPIView, RetrieveAPIView, DestroyAPIView,  UpdateAPIView,  ListCreateAPIView,
+  RetrieveUpdateAPIView, RetrieveDestroyAPIView, RetrieveUpdateDestroyAPIView, ReadOnlyModelViewSet,
+  ModelViewSet).
+* REST_EASY_SERIALIZER_CONFLICT_POLICY - either 'allow' or 'raise'. What should happen when you redeclare a serializer
+  with same model and schema - either the new one will be used or an error will be raised. By default 'allow' to not
+  break applications with weird imports.
 
 Documentation
 -------------

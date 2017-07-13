@@ -50,7 +50,8 @@ if __name__ == '__main__':
                        PASSWORD_HASHERS=(
                            'django.contrib.auth.hashers.MD5PasswordHasher',
                        ),
-                       REST_EASY_VIEW_BASES=['rest_easy.tests.mixins.EmptyMixin'])
+                       REST_EASY_VIEW_BASES=['rest_easy.tests.mixins.EmptyBase'],
+                       REST_EASY_GENERIC_VIEW_MIXINS=['rest_easy.tests.mixins.EmptyMixin'])
     django.setup()
 
     parent = os.path.dirname(os.path.abspath(__file__))

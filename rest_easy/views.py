@@ -59,7 +59,7 @@ from rest_easy.scopes import ScopeQuerySet
 
 def get_additional_bases():
     """
-    Looks for additional view bases in settings.REST_EASY_VIEW_BASES
+    Looks for additional view bases in settings.REST_EASY_VIEW_BASES.
     :return:
     """
     resolved_bases = []
@@ -69,6 +69,22 @@ def get_additional_bases():
         resolved_bases.append(getattr(import_module(mod), cls))
 
     return resolved_bases
+
+
+def get_additional_mixins():
+    """
+    Looks for additional view bases in settings.REST_EASY_VIEW_MIXINS.
+    :return:
+    """
+    resolved_bases = []
+    from importlib import import_module
+    for base in getattr(settings, 'REST_EASY_GENERIC_VIEW_MIXINS', []):
+        mod, cls = base.rsplit('.', 1)
+        resolved_bases.append(getattr(import_module(mod), cls))
+
+    return resolved_bases
+
+ADDITIONAL_MIXINS = get_additional_mixins()
 
 
 class ScopedViewMixin(object):
@@ -112,6 +128,7 @@ class ChainingCreateUpdateMixin(object):
     """
     Chain-enabled versions of perform_create and perform_update.
     """
+
     def perform_create(self, serializer, **kwargs):  # pylint: disable=no-self-use
         """
         Extend default implementation with kwarg chaining.
@@ -201,16 +218,15 @@ class GenericAPIViewBase(ScopedViewMixin, generics.GenericAPIView):
         ))
 
 
-class GenericAPIView(with_metaclass(ViewEasyMetaclass, GenericAPIViewBase, *get_additional_bases())):
+class GenericAPIView(with_metaclass(ViewEasyMetaclass, *(get_additional_bases() + [GenericAPIViewBase]))):
     """
     Base view with compat metaclass.
     """
     __abstract__ = True
 
 
-class CreateAPIView(ChainingCreateUpdateMixin,
-                    mixins.CreateModelMixin,
-                    GenericAPIView):  # pragma: no cover
+class CreateAPIView(*(ADDITIONAL_MIXINS +
+                      [ChainingCreateUpdateMixin, mixins.CreateModelMixin, GenericAPIView])):  # pragma: no cover
     """
     Concrete view for creating a model instance.
     """
@@ -222,8 +238,7 @@ class CreateAPIView(ChainingCreateUpdateMixin,
         return self.create(request, *args, **kwargs)
 
 
-class ListAPIView(mixins.ListModelMixin,
-                  GenericAPIView):  # pragma: no cover
+class ListAPIView(*(ADDITIONAL_MIXINS + [mixins.ListModelMixin, GenericAPIView])):  # pragma: no cover
     """
     Concrete view for listing a queryset.
     """
@@ -235,8 +250,7 @@ class ListAPIView(mixins.ListModelMixin,
         return self.list(request, *args, **kwargs)
 
 
-class RetrieveAPIView(mixins.RetrieveModelMixin,
-                      GenericAPIView):  # pragma: no cover
+class RetrieveAPIView(*(ADDITIONAL_MIXINS + [mixins.RetrieveModelMixin, GenericAPIView])):  # pragma: no cover
     """
     Concrete view for retrieving a model instance.
     """
@@ -248,8 +262,7 @@ class RetrieveAPIView(mixins.RetrieveModelMixin,
         return self.retrieve(request, *args, **kwargs)
 
 
-class DestroyAPIView(mixins.DestroyModelMixin,
-                     GenericAPIView):  # pragma: no cover
+class DestroyAPIView(*(ADDITIONAL_MIXINS + [mixins.DestroyModelMixin, GenericAPIView])):  # pragma: no cover
     """
     Concrete view for deleting a model instance.
     """
@@ -261,9 +274,8 @@ class DestroyAPIView(mixins.DestroyModelMixin,
         return self.destroy(request, *args, **kwargs)
 
 
-class UpdateAPIView(ChainingCreateUpdateMixin,
-                    mixins.UpdateModelMixin,
-                    GenericAPIView):  # pragma: no cover
+class UpdateAPIView(*(ADDITIONAL_MIXINS +
+                      [ChainingCreateUpdateMixin, mixins.UpdateModelMixin, GenericAPIView])):  # pragma: no cover
     """
     Concrete view for updating a model instance.
     """
@@ -281,10 +293,11 @@ class UpdateAPIView(ChainingCreateUpdateMixin,
         return self.partial_update(request, *args, **kwargs)
 
 
-class ListCreateAPIView(ChainingCreateUpdateMixin,
-                        mixins.ListModelMixin,
-                        mixins.CreateModelMixin,
-                        GenericAPIView):  # pragma: no cover
+class ListCreateAPIView(*(ADDITIONAL_MIXINS +
+                          [ChainingCreateUpdateMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           GenericAPIView])):  # pragma: no cover
     """
     Concrete view for listing a queryset or creating a model instance.
     """
@@ -302,10 +315,11 @@ class ListCreateAPIView(ChainingCreateUpdateMixin,
         return self.create(request, *args, **kwargs)
 
 
-class RetrieveUpdateAPIView(ChainingCreateUpdateMixin,
-                            mixins.RetrieveModelMixin,
-                            mixins.UpdateModelMixin,
-                            GenericAPIView):  # pragma: no cover
+class RetrieveUpdateAPIView(*(ADDITIONAL_MIXINS +
+                              [ChainingCreateUpdateMixin,
+                               mixins.RetrieveModelMixin,
+                               mixins.UpdateModelMixin,
+                               GenericAPIView])):  # pragma: no cover
     """
     Concrete view for retrieving, updating a model instance.
     """
@@ -329,9 +343,10 @@ class RetrieveUpdateAPIView(ChainingCreateUpdateMixin,
         return self.partial_update(request, *args, **kwargs)
 
 
-class RetrieveDestroyAPIView(mixins.RetrieveModelMixin,
-                             mixins.DestroyModelMixin,
-                             GenericAPIView):  # pragma: no cover
+class RetrieveDestroyAPIView(*(ADDITIONAL_MIXINS +
+                               [mixins.RetrieveModelMixin,
+                                mixins.DestroyModelMixin,
+                                GenericAPIView])):  # pragma: no cover
     """
     Concrete view for retrieving or deleting a model instance.
     """
@@ -349,11 +364,12 @@ class RetrieveDestroyAPIView(mixins.RetrieveModelMixin,
         return self.destroy(request, *args, **kwargs)
 
 
-class RetrieveUpdateDestroyAPIView(ChainingCreateUpdateMixin,
-                                   mixins.RetrieveModelMixin,
-                                   mixins.UpdateModelMixin,
-                                   mixins.DestroyModelMixin,
-                                   GenericAPIView):  # pragma: no cover
+class RetrieveUpdateDestroyAPIView(*(ADDITIONAL_MIXINS +
+                                     [ChainingCreateUpdateMixin,
+                                      mixins.RetrieveModelMixin,
+                                      mixins.UpdateModelMixin,
+                                      mixins.DestroyModelMixin,
+                                      GenericAPIView])):  # pragma: no cover
     """
     Concrete view for retrieving, updating or deleting a model instance.
     """
@@ -392,22 +408,24 @@ class GenericViewSet(ViewSetMixin, GenericAPIView):  # pragma: no cover
     pass
 
 
-class ReadOnlyModelViewSet(mixins.RetrieveModelMixin,
-                           mixins.ListModelMixin,
-                           GenericViewSet):  # pragma: no cover
+class ReadOnlyModelViewSet(*(ADDITIONAL_MIXINS +
+                             [mixins.RetrieveModelMixin,
+                              mixins.ListModelMixin,
+                              GenericViewSet])):  # pragma: no cover
     """
     A viewset that provides default `list()` and `retrieve()` actions.
     """
     pass
 
 
-class ModelViewSet(ChainingCreateUpdateMixin,
-                   mixins.CreateModelMixin,
-                   mixins.RetrieveModelMixin,
-                   mixins.UpdateModelMixin,
-                   mixins.DestroyModelMixin,
-                   mixins.ListModelMixin,
-                   GenericViewSet):  # pragma: no cover
+class ModelViewSet(*(ADDITIONAL_MIXINS +
+                     [ChainingCreateUpdateMixin,
+                      mixins.CreateModelMixin,
+                      mixins.RetrieveModelMixin,
+                      mixins.UpdateModelMixin,
+                      mixins.DestroyModelMixin,
+                      mixins.ListModelMixin,
+                      GenericViewSet])):  # pragma: no cover
     """
     A viewset that provides default `create()`, `retrieve()`, `update()`,
     `partial_update()`, `destroy()` and `list()` actions.

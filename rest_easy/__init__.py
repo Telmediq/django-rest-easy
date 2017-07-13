@@ -26,7 +26,13 @@ there will be possible with the django-rest-easy base classes.
 Uses followint settings:
 
 * REST_EASY_AUTOIMPORT_SERIALIZERS_FROM - for autoimporting serializers.
-* REST_EASY_VIEW_BASES - for prepending bases to generic views.
+* REST_EASY_VIEW_BASES - for prepending bases to all views declared in django-rest-easy. They will end up before
+  all base views, either DRF's or django-rest-easy's, but after generic mixins in the final generic view mro.
+  So in :class:`rest_easy.views.GenericAPIView` and :class:`rest_easy.views.GenericAPIViewSet` they will be at the
+  very beginning of the mro, but everything declared in generic mixins, like DRF's CreateMixin, will override that.
+* REST_EASY_GENERIC_VIEW_MIXINS - for prepending bases to generic views. They will end up at the beginning of mro
+  of all generic views available in django-rest-easy. This can be used to make views add parameters when doing
+  perform_update() or perform_create().
 * REST_EASY_SERIALIZER_CONFLICT_POLICY - what happens when serializer with same model and schema is redefined. Defaults
   to 'allow', can also be 'raise' - in the former case the new serializer will replace the old one. Allow is used
   to make sure that any import craziness is not creating issues by default.
