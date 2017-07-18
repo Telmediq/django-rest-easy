@@ -14,6 +14,8 @@ import six
 from rest_easy.exceptions import RestEasyException
 from rest_easy.patterns import BaseRegister
 
+__all__ = ['SerializerRegister', 'serializer_register']
+
 
 class SerializerRegister(BaseRegister):
     """
@@ -23,7 +25,7 @@ class SerializerRegister(BaseRegister):
     def get_name(model, schema):
         """
         Constructs serializer registration name using model's app label, model name and schema.
-        :param model: a Django model, a ct-like model string (app_label.model_name) or explicit None.
+        :param model: a Django model, a ct-like app-model string (app_label.modelname) or explicit None.
         :param schema: schema to be used.
         :return: constructed serializer registration name.
         """
@@ -32,7 +34,7 @@ class SerializerRegister(BaseRegister):
         if isinstance(model, six.string_types):
             return '{}.{}'.format(model, schema)
         try:
-            return '{}.{}.{}'.format(model._meta.app_label, model._meta.object_name, schema)  # pylint: disable=protected-access
+            return '{}.{}.{}'.format(model._meta.app_label, model._meta.model_name, schema)  # pylint: disable=protected-access
         except AttributeError:
             raise RestEasyException('Model must be either None, a ct-like model string or Django model class.')
 

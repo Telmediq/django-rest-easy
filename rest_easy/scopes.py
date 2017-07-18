@@ -12,6 +12,8 @@ from django.shortcuts import get_object_or_404
 
 from rest_easy.exceptions import RestEasyException
 
+__all__ = ['ScopeQuerySet', 'UrlKwargScopeQuerySet', 'RequestAttrScopeQuerySet']
+
 
 class ScopeQuerySet(object):
     """
@@ -20,8 +22,8 @@ class ScopeQuerySet(object):
     It works by selecting a proper parent model instance and filtering view's queryset with it automatically.
     """
 
-    def __init__(self, qs_or_obj, parent_field='id', related_field=None, raise_404=False, parent=None,
-                 allow_none=False):
+    def __init__(self, qs_or_obj, parent_field='pk', related_field=None, raise_404=False, allow_none=False,
+                 parent=None):
         """
         Sets instance properties, infers sane defaults and ensures qs_or_obj is correct.
 

@@ -1,5 +1,6 @@
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+================
+Django Rest Easy
+================
 
-   auto/modules
+.. include:: tutorial.rst
+.. include:: modules.rst.inc

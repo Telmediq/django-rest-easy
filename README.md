@@ -1,7 +1,7 @@
 django-rest-easy
 ================
 
-[![Build Status](https://travis-ci.org/TelmedIQ/django-rest-easy.svg)](https://travis-ci.org/TelmedIQ/django-rest-easy)
+[![Build Status](https://travis-ci.org/Telmediq/django-rest-easy.svg)](https://travis-ci.org/Telmediq/django-rest-easy)
 
 django-rest-easy is an extension to DRF providing QOL improvements to serializers and views.
 It enables:
@@ -35,14 +35,23 @@ class UserViewSet(ModelViewSet):
     scope = UrlKwargScopeQuerySet(Account)
 
 router = DefaultRouter()
-router.register(r'users/(?P<user_pk>\d+)/messages', UserViewSet)
+router.register(r'accounts/(?P<account_pk>\d+)/users', UserViewSet)
 
 urlpatterns = [url(r'^', include(router.urls))]
 ```
 
 Installation
 ------------
-`pip install django-rest-easy` and add rest_easy to installed apps in Django settings.
+`pip install django-rest-easy` and add rest_easy to installed apps in Django settings:
+
+```python
+INSTALLED_APPS = (
+    # ...
+    'rest_framework',
+    'rest_easy',
+    # ...
+)
+```
 
 The settings used are:
 
@@ -84,7 +93,6 @@ You can also check the build manually, just make sure to `pip install -r require
 ```
 pylint rest_easy --rcfile=.pylintrc
 coverage run --source=rest_easy -m rest_easy.runtests && coverage report -m
-sphinx-apidoc -o docs/auto rest_easy -f
 cd docs && make html
 ```
 

@@ -8,6 +8,7 @@ from six import with_metaclass
 
 from rest_easy.exceptions import RestEasyException
 
+__all__ = ['SingletonCreator', 'SingletonBase', 'Singleton', 'BaseRegister', 'RegisteredCreator']
 
 class SingletonCreator(type):
     """
@@ -199,15 +200,17 @@ class RegisteredCreator(type):
         Lists required fields that are missing.
 
         Supports two formats of input of required fields: either a simple set {'a', 'b'} or a dict with several
-        options:
-        >>> {
-        >>>     'nested': {
-        >>>         'presence_check_only': None,
-        >>>         'functional_check': lambda value: isinstance(value, Model)
-        >>>     },
-        >>>     'flat_presence_check': None,
-        >>>     'flat_functional_check': lambda value: isinstance(value, Model)
-        >>> }
+        options::
+
+            {
+                'nested': {
+                    'presence_check_only': None,
+                    'functional_check': lambda value: isinstance(value, Model)
+                },
+                'flat_presence_check': None,
+                'flat_functional_check': lambda value: isinstance(value, Model)
+            }
+
         Functional checks need to return true for field not to be marked as missing.
         Dict-format also supports both dict and attribute based accesses for fields (fields['a'] and fields.a).
 

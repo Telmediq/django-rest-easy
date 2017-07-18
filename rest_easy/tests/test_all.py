@@ -294,7 +294,7 @@ class TestModels(BaseTestCase):
         self.assertRaises(RestEasyException, lambda: taggable.serialize('nope'))
 
     def test_deserialize_success(self):
-        data = {'model': 'rest_easy.MockModel', 'schema': 'default', 'value': 'zxc'}
+        data = {'model': 'rest_easy.mockmodel', 'schema': 'default', 'value': 'zxc'}
         validated = deserialize_data(data)
         self.assertEqual(validated, {'value': data['value']})
 
@@ -384,6 +384,8 @@ class TestViews(BaseTestCase):
 
         class UserViewSet2(ModelViewSet):
             serializer_class = UserSerializer
+
+        print([x for x in serializer_register.entries()])
 
         vs = UserViewSet()
         vs.request = Container()
