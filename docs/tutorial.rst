@@ -20,7 +20,7 @@ coherent workflow for creating REST APIs:
 * A helper methods that find serializer class and deserialize a blob of data, since oftentimes you will not know what exact data you will
   receive in a particular endpoint, especially when dealing with complex integrations.
 
-All of the above are possible in pure DRF, but usually introduce a lot of boilerplate or aren\'t very easy or straightforward to code>
+All of the above are possible in pure DRF, but usually introduce a lot of boilerplate or aren\'t very easy or straightforward to code
 Therefore, at Telmediq we decided to open source the package that helps make our API code cleaner and more concise.
 
 ************
