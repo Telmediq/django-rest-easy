@@ -20,6 +20,10 @@ from rest_easy.tests.models import *
 from rest_easy.views import ModelViewSet
 
 
+class Container(object):
+    pass
+
+
 class BaseTestCase(TestCase):
     def setUp(self):
         pass
@@ -338,6 +342,19 @@ class TestViews(BaseTestCase):
         vs.kwargs = {'account_pk': 1}
         self.assertEqual(0, vs.get_queryset().count())
 
+    def test_get_scope_object(self):
+        mock = Container()
+
+        class UserViewSet(ModelViewSet):
+            model = User
+            scope = RequestAttrScopeQuerySet(Account, request_attr='account')
+
+        vs = UserViewSet()
+        vs.request = Container()
+        vs.request.account = mock
+        self.assertEqual(mock, vs.get_account)
+        self.assertRaises(AttributeError, lambda: vs.get_whatever())
+
     def test_performs(self):
         class UserViewSet(ModelViewSet):
             model = User
@@ -385,10 +402,9 @@ class TestViews(BaseTestCase):
         class UserViewSet2(ModelViewSet):
             serializer_class = UserSerializer
 
-        print([x for x in serializer_register.entries()])
-
         vs = UserViewSet()
         vs.request = Container()
+        vs.rest_easy_object_cache = {}
 
         # retrieve
         vs.kwargs = {'pk': 1}
@@ -413,20 +429,17 @@ class TestViews(BaseTestCase):
 
         vs = UserViewSet()
         vs.request = Container()
+        vs.rest_easy_object_cache = {}
         vs.kwargs = {'pk': 1}
         vs.request.method = 'get'
         self.assertRaises(RestEasyException, vs.get_serializer_class)
 
         vs = UserViewSet2()
         vs.request = Container()
+        vs.rest_easy_object_cache = {}
         vs.kwargs = {'pk': 1}
         vs.request.method = 'get'
         self.assertRaises(RestEasyException, vs.get_serializer_class)
-
-
-
-class Container(object):
-    pass
 
 
 class TestScopeQuerySet(BaseTestCase):
@@ -437,19 +450,38 @@ class TestScopeQuerySet(BaseTestCase):
         self.other_user = User.objects.create(account=self.other_account)
 
     def test_chaining(self):
-        self.assertRaises(NotImplementedError, lambda: UrlKwargScopeQuerySet(Account,
-                                                                             parent=ScopeQuerySet(Account.objects.all())
-                                                                             ).child_queryset(None, None))
+        self.assertRaises(NotImplementedError,
+                          lambda: UrlKwargScopeQuerySet(Account,
+                                                        parent=ScopeQuerySet(Account.objects.all(),
+                                                                             get_object_handle=None),
+                                                        get_object_handle=None
+                                                        ).child_queryset(None, None))
 
     def test_creation_fails(self):
         self.assertRaises(RestEasyException, lambda: ScopeQuerySet(object))
         self.assertRaises(RestEasyException, lambda: ScopeQuerySet(None))
-        self.assertRaises(RestEasyException, lambda: UrlKwargScopeQuerySet(None, related_field='a'))
+        self.assertRaises(RestEasyException, lambda: UrlKwargScopeQuerySet(None, related_field='a',
+                                                                           get_object_handle=None))
         self.assertRaises(RestEasyException, lambda: RequestAttrScopeQuerySet(None))
         self.assertRaises(RestEasyException, lambda: RequestAttrScopeQuerySet(None, request_attr='a'))
+        self.assertRaises(RestEasyException, lambda: RequestAttrScopeQuerySet(None,
+                                                                              request_attr='a',
+                                                                              related_field='a'))
+
+    def test_contribute_to_class(self):
+        view = Container()
+        view.rest_easy_object_cache = {}
+        view.rest_easy_available_object_handles = {}
+        parent = UrlKwargScopeQuerySet(User, get_object_handle='test')
+        scope = UrlKwargScopeQuerySet(Account, parent=parent)
+        scope.contribute_to_class(view)
+        self.assertEqual(view.rest_easy_available_object_handles['account'], scope)
+        self.assertEqual(view.rest_easy_available_object_handles['test'], parent)
+        self.assertRaises(RestEasyException, lambda: scope.contribute_to_class(view))
 
     def test_url_kwarg(self):
         view = Container()
+        view.rest_easy_object_cache = {}
         view.kwargs = {'account_pk': self.other_account.pk}
 
         qs = UrlKwargScopeQuerySet(Account).child_queryset(User.objects.all(), view)
@@ -458,6 +490,7 @@ class TestScopeQuerySet(BaseTestCase):
 
     def test_request_attrs(self):
         view = Container()
+        view.rest_easy_object_cache = {}
         view.request = Container()
         view.request.account = self.other_account.pk
 
@@ -468,12 +501,13 @@ class TestScopeQuerySet(BaseTestCase):
 
         view.request.account = self.other_account
         qs = RequestAttrScopeQuerySet(Account, request_attr='account',
-                                      is_object=True).child_queryset(User.objects.all(), view)
+                                      is_object=True, get_object_handle=None).child_queryset(User.objects.all(), view)
         self.assertIn(self.other_user, list(qs))
         self.assertEqual(1, len(list(qs)))
 
     def test_none(self):
         view = Container()
+        view.rest_easy_object_cache = {}
         view.kwargs = {'account_pk': self.other_account.pk + 100}
 
         qs = UrlKwargScopeQuerySet(Account).child_queryset(User.objects.all(), view)
@@ -481,6 +515,7 @@ class TestScopeQuerySet(BaseTestCase):
 
     def test_raises(self):
         view = Container()
+        view.rest_easy_object_cache = {}
         view.kwargs = {'account_pk': self.other_account.pk + 100}
 
         self.assertRaises(Http404,

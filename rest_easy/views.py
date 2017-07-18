@@ -103,10 +103,36 @@ class ScopedViewMixin(object):
         :return: queryset.
         """
         queryset = super(ScopedViewMixin, self).get_queryset()
-        if hasattr(self, 'scope'):
+        if hasattr(self, 'scope') and self.scope:
             for scope in self.scope:
                 queryset = scope.child_queryset(queryset, self)
         return queryset
+
+    def get_scoped_object(self, handle):
+        """
+        Obtains object from scope when scope's get_object_handle was set.
+        :param handle: get_object_handle used in scope initialization.
+        :return: object used by scope to filter.
+        """
+        scope = self.rest_easy_available_object_handles.get(handle, None)
+        if scope:
+            return scope.get_object(self)
+        raise AttributeError('{} get_object handle not found on object {}'.format(handle, self))
+
+    def __getattr__(self, item):
+        """
+        A shortcut providing get_{get_object_handle} to be able to easily access objects used by this view's scopes
+        for filtering. For example, scope = UrlKwargScopeQuerySet(Account) will be available with self.get_account().
+        :param item: item to obtain plus 'get_' prefix
+        :return: object used by scope for filtering.
+        """
+        if not item.startswith('get_'):
+            raise AttributeError('{} not found on object {}'.format(item, self))
+        handle = item[4:]
+        try:
+            return self.get_scoped_object(handle)
+        except AttributeError:
+            raise AttributeError('{} not found on object {}'.format(item, self))
 
 
 class ViewEasyMetaclass(type):  # pylint: disable=too-few-public-methods
@@ -124,7 +150,11 @@ class ViewEasyMetaclass(type):  # pylint: disable=too-few-public-methods
             attrs['queryset'] = attrs['model'].objects.all()
         if 'scope' in attrs and isinstance(attrs['scope'], ScopeQuerySet):
             attrs['scope'] = [attrs['scope']]
-        return super(ViewEasyMetaclass, mcs).__new__(mcs, name, bases, attrs)
+        attrs['rest_easy_available_object_handles'] = {}
+        cls = super(ViewEasyMetaclass, mcs).__new__(mcs, name, bases, attrs)
+        for scope in getattr(cls, 'scope', []):
+            scope.contribute_to_class(cls)
+        return cls
 
 
 class ChainingCreateUpdateMixin(object):
@@ -161,6 +191,14 @@ class GenericAPIViewBase(ScopedViewMixin, generics.GenericAPIView):
 
     """
     serializer_schema_for_verb = {}
+
+    def __init__(self, **kwargs):
+        """
+        Set object cache to empty dict.
+        :param kwargs: Passthrough to Django view.
+        """
+        super(GenericAPIViewBase, self).__init__(**kwargs)
+        self.rest_easy_object_cache = {}
 
     def get_drf_verb(self):
         """

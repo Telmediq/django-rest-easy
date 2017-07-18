@@ -23,7 +23,7 @@ class ScopeQuerySet(object):
     """
 
     def __init__(self, qs_or_obj, parent_field='pk', related_field=None, raise_404=False, allow_none=False,
-                 parent=None):
+                 get_object_handle='', parent=None):
         """
         Sets instance properties, infers sane defaults and ensures qs_or_obj is correct.
 
@@ -31,12 +31,15 @@ class ScopeQuerySet(object):
         :param parent_field: the field to filter by in the parent queryset (qs_or_obj), by default 'id'.
         :param related_field: the field to filter by in the view queryset, by default model_name.
         :param raise_404: whether 404 should be raised if parent object cannot be found.
+        :param allow_none: if filtering view queryset by object=None should be allowed. If it's false, resulting
+         queryset is guaranteed to be empty if parent object can't be found and 404 is not raised.
+        :param get_object_handle: the name under which the object should be available in view. ie.
+         view.get_scoped_object(get_object_handle) or view.get_{get_object_handle}. If None, the object will
+         not be available from view level. By default will be infered to qs_or_obj's model_name.
         :param parent: if this object's queryset should be filtered by another parameter, parent attribute should be
          an instance of ScopeQuerySet. This allows for ScopeQuerySetChaining (ie. for messages we might have
          UrlKwargScopeQuerySet(User, parent=UrlKwargScopeQuerySet(Account))  for scoping by user and limiting users
          to an account.
-        :param allow_none: if filtering view queryset by object=None should be allowed. If it's false, resulting
-         queryset is guaranteed to be empty if parent object can't be found and 404 is not raised.
         """
         if isinstance(qs_or_obj, QuerySet):
             self.queryset = qs_or_obj
@@ -57,6 +60,27 @@ class ScopeQuerySet(object):
         self.raise_404 = raise_404
         self.parent = ([parent] if isinstance(parent, ScopeQuerySet) else parent) or []
         self.allow_none = allow_none
+        self.get_object_handle = get_object_handle
+        if self.get_object_handle == '':
+            try:
+                self.get_object_handle = self.queryset.model._meta.model_name  # pylint: disable=protected-access
+            except AttributeError:
+                raise RestEasyException('Either qs_or_obj or explicit get_object_handle (can be None) must be given.')
+
+    def contribute_to_class(self, view):
+        """
+        Put self.get_object_handle into view's available handles dict to allow easy access to the scope's get_object()
+        method in case the object needs to be reused (ie. in child object creation).
+        :param view: View the scope is added to.
+        """
+        if self.get_object_handle:
+            if self.get_object_handle in view.rest_easy_available_object_handles:
+                raise RestEasyException(
+                    'ImproperlyConfigured: multiple scopes with {} get_object handle!'.format(self.get_object_handle)
+                )
+            view.rest_easy_available_object_handles[self.get_object_handle] = self
+        for scope in self.parent:
+            scope.contribute_to_class(view)
 
     def get_value(self, view):
         """
@@ -78,6 +102,21 @@ class ScopeQuerySet(object):
         return queryset
 
     def get_object(self, view):
+        """
+        Caching wrapper around _get_object.
+        :param view: DRF view instance.
+        :return: object (instance of init's qs_or_obj model except shadowed by subclass).
+        """
+        if self.get_object_handle:
+            obj = view.rest_easy_object_cache.get(self.get_object_handle, None)
+            if not obj:
+                obj = self._get_object(view)
+                view.rest_easy_object_cache[self.get_object_handle] = obj
+        else:
+            obj = self._get_object(view)
+        return obj
+
+    def _get_object(self, view):
         """
         Obtains parent object by which view queryset should be filtered.
         :param view: DRF view instance.
@@ -176,12 +215,12 @@ class RequestAttrScopeQuerySet(ScopeQuerySet):
         """
         return getattr(view.request, self.request_attr, None)
 
-    def get_object(self, view):
+    def _get_object(self, view):
         """
-        Extends standard get_object's behaviour with handling values that are already objects.
+        Extends standard _get_object's behaviour with handling values that are already objects.
         :param view: DRF view instance.
         :return: object to filter view's queryset by.
         """
         if self.is_object:
             return self.get_value(view)
-        return super(RequestAttrScopeQuerySet, self).get_object(view)
+        return super(RequestAttrScopeQuerySet, self)._get_object(view)

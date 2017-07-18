@@ -173,11 +173,11 @@ A view example showing available features::
         scope = UrlKwargScopeQuerySet(Account)
 
         def perform_update(self, serializer, **kwargs):
-            kwargs['account'] = self.kwargs.get('account_pk')
+            kwargs['account'] = self.get_account()
             return super(UserViewSet, self).perform_update(serializer, **kwargs)
 
         def perform_create(self, serializer, **kwargs):
-            kwargs['account'] = self.kwargs.get('account_pk')
+            kwargs['account'] = self.get_account()
             return super(UserViewSet, self).perform_create(serializer, **kwargs)
 
 We're setting `User` as model, so the inferred queryest will be `User.objects.all()`. When a request comes in, a proper serializer will
@@ -192,8 +192,22 @@ queryset is modified with::
 
     queryset = queryset.filter(account=Account.objects.get(pk=self.kwargs.get('account_pk')))
 
-This follows standard Django convention of naming foreign keys by `RelatedModel._meta.model_name`, using pk as primary key and
-modelname_pk as url kwarg. All of those parameters are configurable (see Scopes section below).
+Also, helper methods are provided for each scope that doesn't disable it::
+
+    def get_account(self):
+        return Account.objects.get(pk=self.kwargs.get('account_pk'))
+
+Technically, they are implemented with `__getattr__`, but each scope which doesn\'t have get_object_handle set to None
+will provide a get_X method (like `get_account` above) to obtain the object used for filtering. The object is kept cached
+on the view instance, so it can be reused during request handling without additional database queries. If the get_X method
+would be shadowed by something else, all scoped object are available via `view.get_scoped_object`::
+
+    def perform_create(self, serializer, **kwargs):
+        kwargs['account'] = self.get_scoped_object('account')
+        return super(UserViewSet, self).perform_create(serializer, **kwargs)
+
+This follows standard Django convention of naming foreign keys by `RelatedModel._meta.model_name` (same as scoped object access
+on view), using pk as primary key and modelname_pk as url kwarg. All of those parameters are configurable (see Scopes section below).
 
 For more complex cases, you can provide a list of scopes instead of a single scope. All of them will be applied to the queryset.
 
@@ -253,6 +267,11 @@ When instantiating it, it accepts the following parameters (`{value}` is the fil
 * allow_none: If the instance we\'re scoping by isn\'t found and 404 is not raised, whether to allow filtering child queryset with None
   (`allow_none=True`) or not - in this case we will filter with model.objects.none() and guarantee no results (`allow_none=False`).
   False by default.
+* get_object_handle: the name under which the object used for filtering (either None or result of applying {value} filter to queryset)
+  will be available on the view. By default this is inferred to model_name. Can be set to None to disable access. It can be accessed
+  from view as view.get_{get_object_handle}, so when using the above example, view.get_thread(). If the get_x method would be
+  shadowed by something else, there is an option to call view.get_scoped_object(get_object_handle), so for example
+  view.get_scoped_object(thread).
 * parent: parent scope. If present, qs_or_obj will be filtered by the scope or scopes passed as this parameter, just as if this was a
   view.
 
