@@ -4,7 +4,7 @@
 This module provides redefined DRF's generic views and viewsets leveraging serializer registration.
 
 One of the main issues with creating traditional DRF APIs is a lot of bloat (and we're writing Python, not Java or C#,
-to avoid bloat) that's completely unnecessary in a structured Django project. Therefore this module aims to provide
+to avoid bloat) that's completely unnecessary in a structured Django project. Therefore, this module aims to provide
 a better and simpler way to write simple API endpoints - without limiting the ability to create more complex views.
 The particular means to that end are:
 

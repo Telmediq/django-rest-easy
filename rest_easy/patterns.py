@@ -1,6 +1,6 @@
 """
 This class defines generic bases for a few design / architectural patterns
-required byt django-rest-easy, namely singleton and register.
+required by django-rest-easy, namely singleton and register.
 """
 
 from functools import wraps
@@ -13,7 +13,7 @@ __all__ = ['SingletonCreator', 'SingletonBase', 'Singleton', 'BaseRegister', 'Re
 class SingletonCreator(type):
     """
     This metaclass wraps __init__ method of created class with singleton_decorator.
-    It's to make sure that it's impossible to mess up the instance for example by
+    This ensures that it's impossible to mess up the instance for example by
     calling __init__ with getattr.
     """
 

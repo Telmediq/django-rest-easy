@@ -10,18 +10,18 @@ coherent workflow for creating REST APIs:
 * A :class:`rest_easy.fields.StaticField` for adding static data (independent of instance) to serializers.
 * Creating views and viewsets using model and schema (it will automatically obtain serializer and queryset, although you can override
   both with usual DRF class-level parameters).
-* Serializer override for a particular DRF verb, like create or update: no manual get_serialize_class override, no splitting ViewSets
+* A serializer override for a particular DRF verb, like create or update: no manual get_serialize_class override, no splitting ViewSets
   into multiple views.
-* Scoping views\' querysets and viewsets by url kwargs or request object parameters when you want to limit messages to a particular
-  thread or threads to currently logged in user.
+* Scoping views\' querysets and viewsets by url kwargs or request object parameters. Fore example, when you want to limit messages to
+  a particular thread or threads to currently logged in user.
 * Adding your own base classes to `GenericView` and your own mixins to all resulting generic view classes, like `ListCreateAPIView`.
 * Chaining views\' `perform_update` and `perform_create`: they by default pass \*\*kwargs to `serializer.save()` now.
-* Helper mixin that enables serializing Django model instances with just an instance method call.
-* Helper methods that find serializer class and deserialize a blob of data, since oftentimes you will not know what exact data you will
+* A helper mixin that enables serializing Django model instances with just an instance method call.
+* A helper methods that find serializer class and deserialize a blob of data, since oftentimes you will not know what exact data you will
   receive in a particular endpoint, especially when dealing with complex integrations.
 
-All of the above are possible in pure DRF, but usually introduce a lot of boilerplate or aren\'t very easy or straightforward to code,
-thereferore at Telmediq we decided to open source the package that helps make our API code cleaner and more concise.
+All of the above are possible in pure DRF, but usually introduce a lot of boilerplate or aren\'t very easy or straightforward to code>
+Therefore, at Telmediq we decided to open source the package that helps make our API code cleaner and more concise.
 
 ************
 Installation
@@ -58,9 +58,9 @@ Additionally, the following settings can alter the behaviour of the package:
 * REST_EASY_AUTOIMPORT_SERIALIZERS_FROM - specify modules or packages that rest-easy will try to import serializers
   from when AppConfig is ready. The import is app-based, so it will search for serializers in all installed apps.
   By default `['serializers']`
-* REST_EASY_VIEW_BASES - your mixins that should go into all views near the end of the mro (before all DRF and
-  django-rest-easy's bases, after all generic mixins from DRF).
-* REST_EASY_GENERIC_VIEW_MIXINS - your mixins that should go into all generic views at the beginning of the mro
+* REST_EASY_VIEW_BASES - the mixins that should go into all views near the end of the mro (method resolution order). They
+  will be placed before all DRF and django-rest-easy's bases, and after all generic mixins from DRF.
+* REST_EASY_GENERIC_VIEW_MIXINS - the mixins that should go into all generic views at the beginning of the mro
   (that means CreateAPIView, ListAPIView, RetrieveAPIView, DestroyAPIView,  UpdateAPIView,  ListCreateAPIView,
   RetrieveUpdateAPIView, RetrieveDestroyAPIView, RetrieveUpdateDestroyAPIView, ReadOnlyModelViewSet,
   ModelViewSet).

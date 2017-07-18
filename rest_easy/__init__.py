@@ -23,7 +23,7 @@ sending duplicate data for quite some time).
 The classes from this module don't disable any behaviour inherent to Django Rest Framework - anything that is possible
 there will be possible with the django-rest-easy base classes.
 
-Uses followint settings:
+Django Rest Easy uses following settings:
 
 * REST_EASY_AUTOIMPORT_SERIALIZERS_FROM - for autoimporting serializers.
 * REST_EASY_VIEW_BASES - for prepending bases to all views declared in django-rest-easy. They will end up before
