@@ -3,8 +3,8 @@ django-rest-easy
 
 [![Build Status](https://travis-ci.org/Telmediq/django-rest-easy.svg)](https://travis-ci.org/Telmediq/django-rest-easy)
 
-Django-rest-easy is an extension to Django Rest Framework providing QOL improvements to serializers and views that introduce a more
-coherent workflow for creating REST APIs:
+Django-rest-easy is an extension to Django Rest Framework providing quality of life improvements to serializers and views
+that introduce a more coherent workflow for creating REST APIs:
 
 * Versioning and referencing serializers by model and schema, along with autoimport, so your serializers will be available anywhere,
   as long as you know the model and schema.
