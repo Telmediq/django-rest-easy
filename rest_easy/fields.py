@@ -14,12 +14,12 @@ class StaticField(Field):  # pylint: disable=abstract-method
     A field that always provides the same value as output.
 
     The output value is set on initialization, ie::
-    
+
         from rest_easy.serializers import Serializer
 
         class MySerializer(Serializer):
             static = StaticField('This will always be the value.')
-    
+
     """
 
     def __init__(self, value, **kwargs):
