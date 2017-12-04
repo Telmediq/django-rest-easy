@@ -74,9 +74,11 @@ class ApiConfig(AppConfig):
         """
 
         from importlib import import_module
+        from django.apps import apps
         from django.utils.module_loading import module_has_submodule
 
-        for app in settings.INSTALLED_APPS:
+        for app_config in apps.get_app_configs():
+            app = app_config.name
             mod = import_module(app)
 
             # Attempt to import the app's serializers.
