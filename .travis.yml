@@ -4,6 +4,9 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
+install:
+  - if [[ $TRAVIS_PYTHON_VERSION != '2.7' ]]; then pip install -r requirements.txt; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pip install -r requirements-2.txt; fi
 script:
   - pylint rest_easy --rcfile=.pylintrc
   - coverage run --source=rest_easy -m rest_easy.runtests

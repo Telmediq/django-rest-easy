@@ -29,4 +29,4 @@ class Account(SerializableMixin, models.Model):
 class User(SerializableMixin, models.Model):
     class Meta:
         app_label = 'rest_easy'
-    account = models.ForeignKey(Account)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
