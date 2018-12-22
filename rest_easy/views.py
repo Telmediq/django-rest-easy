@@ -90,7 +90,7 @@ def get_additional_mixins():
 ADDITIONAL_MIXINS = get_additional_mixins()
 
 
-class ScopedViewMixin(object):
+class ScopedViewMixin(object):  # pylint: disable=useless-object-inheritance
     """
     This class provides a get_queryset method that works with ScopeQuerySet.
 
@@ -157,7 +157,7 @@ class ViewEasyMetaclass(type):  # pylint: disable=too-few-public-methods
         return cls
 
 
-class ChainingCreateUpdateMixin(object):
+class ChainingCreateUpdateMixin(object):  # pylint: disable=useless-object-inheritance
     """
     Chain-enabled versions of perform_create and perform_update.
     """
@@ -383,7 +383,6 @@ class GenericViewSet(ViewSetMixin, GenericAPIView):  # pragma: no cover
     but does include the base set of generic view behavior, such as
     the `get_object` and `get_queryset` methods.
     """
-    pass
 
 
 ReadOnlyModelViewSet = type('ReadOnlyModelViewSet',
