@@ -34,6 +34,7 @@ class SingletonCreator(type):
             """
             if args[0].sl_init:
                 return func(*args, **kwargs)
+            return None
 
         return wrapper
 
@@ -74,7 +75,6 @@ class Singleton(with_metaclass(SingletonCreator, SingletonBase)):  # pylint: dis
     This is a Singleton you can inherit from.
     It reserves sl_init instance attribute to work properly.
     """
-    pass
 
 
 class BaseRegister(Singleton):
@@ -122,8 +122,7 @@ class BaseRegister(Singleton):
         if not self.lookup(name) or self.get_conflict_policy() == 'allow':
             self._entries[name] = ref
             return True
-        else:
-            raise RestEasyException('Entry named {} is already registered.'.format(name))
+        raise RestEasyException('Entry named {} is already registered.'.format(name))
 
     def lookup(self, name):
         """
@@ -247,7 +246,6 @@ class RegisteredCreator(type):
         :param attrs: class attributes.
         :return: None.
         """
-        pass
 
     def __new__(mcs, name, bases, attrs):
         """

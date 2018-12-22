@@ -383,7 +383,6 @@ class GenericViewSet(ViewSetMixin, GenericAPIView):  # pragma: no cover
     but does include the base set of generic view behavior, such as
     the `get_object` and `get_queryset` methods.
     """
-    pass
 
 
 ReadOnlyModelViewSet = type('ReadOnlyModelViewSet',
