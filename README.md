@@ -11,14 +11,14 @@ that introduce a more coherent workflow for creating REST APIs:
 * A `StaticField` for adding static data (independent of instance) to serializers.
 * Creating views and viewsets using model and schema (it will automatically obtain serializer and queryset, although you can override
   both with usual DRF class-level parameters).
-* A serializer override for a particular DRF verb, like create or update: no manual get_serialize_class override, no splitting ViewSets
+* A serializer override for a particular DRF verb, like create or update: no manual get_serializer_class override, no splitting ViewSets
   into multiple views.
-* Scoping views\' querysets and viewsets by url kwargs or request object parameters. Fore example, when you want to limit messages to
+* Scoping views\' and viewsets\' querysets by url kwargs or request object parameters. Fore example, when you want to limit messages to
   a particular thread or threads to currently logged in user.
 * Adding your own base classes to `GenericView` and your own mixins to all resulting generic view classes, like `ListCreateAPIView`.
 * Chaining views\' `perform_update` and `perform_create`: they by default pass \*\*kwargs to `serializer.save()` now.
 * A helper mixin that enables serializing Django model instances with just an instance method call.
-* A helper methods that find serializer class and deserialize a blob of data, since oftentimes you will not know what exact data you will
+* A set of helper methods that find serializer class and deserialize a blob of data, since oftentimes you will not know what exact data you will
   receive in a particular endpoint, especially when dealing with complex integrations.
 
 All of the above are possible in pure DRF, but usually introduce a lot of boilerplate or aren\'t very easy or straightforward to code.
