@@ -15,7 +15,7 @@ from rest_easy.exceptions import RestEasyException
 __all__ = ['ScopeQuerySet', 'UrlKwargScopeQuerySet', 'RequestAttrScopeQuerySet']
 
 
-class ScopeQuerySet(object):  # pylint: disable=useless-object-inheritance
+class ScopeQuerySet(object):
     """
     This class provides a scope-by-parent-element functionality to views and their querysets.
 

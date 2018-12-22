@@ -48,7 +48,7 @@ class SingletonCreator(type):
         return super(SingletonCreator, mcs).__new__(mcs, name, bases, attrs)
 
 
-class SingletonBase(object):  # pylint: disable=too-few-public-methods,useless-object-inheritance
+class SingletonBase(object):  # pylint: disable=too-few-public-methods
     """
     This class implements the singleton pattern using a metaclass and
     overriding default __new__ magic method's behaviour. It works together with

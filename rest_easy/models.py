@@ -13,7 +13,7 @@ from rest_easy.registers import serializer_register
 __all__ = ['SerializableMixin', 'get_serializer', 'deserialize_data']
 
 
-class SerializableMixin(object):  # pylint: disable=useless-object-inheritance
+class SerializableMixin(object):
     """
     This mixin provides serializing functionality to Django models.
 

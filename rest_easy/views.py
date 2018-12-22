@@ -90,7 +90,7 @@ def get_additional_mixins():
 ADDITIONAL_MIXINS = get_additional_mixins()
 
 
-class ScopedViewMixin(object):  # pylint: disable=useless-object-inheritance
+class ScopedViewMixin(object):
     """
     This class provides a get_queryset method that works with ScopeQuerySet.
 
@@ -157,7 +157,7 @@ class ViewEasyMetaclass(type):  # pylint: disable=too-few-public-methods
         return cls
 
 
-class ChainingCreateUpdateMixin(object):  # pylint: disable=useless-object-inheritance
+class ChainingCreateUpdateMixin(object):
     """
     Chain-enabled versions of perform_create and perform_update.
     """

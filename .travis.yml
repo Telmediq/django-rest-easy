@@ -8,5 +8,6 @@ install:
   - if [[ $TRAVIS_PYTHON_VERSION != '2.7' ]]; then pip install -r requirements.txt; fi
   - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pip install -r requirements-2.txt; fi
 script:
-  - pylint rest_easy --rcfile=.pylintrc
+  - if [[ $TRAVIS_PYTHON_VERSION != '2.7' ]]; then pylint rest_easy --rcfile=.pylintrc3; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pylint rest_easy --rcfile=.pylintrc; fi
   - coverage run --source=rest_easy -m rest_easy.runtests
